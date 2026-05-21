@@ -1,0 +1,173 @@
+{
+  "project": "VNU-LEO v2",
+  "computed_at": "2026-05-21T22:42:01.583252+00:00",
+  "coverage_region": {
+    "name": "Vietnam",
+    "lat_min": 8.0,
+    "lat_max": 23.5,
+    "lon_min": 102.0,
+    "lon_max": 110.0
+  },
+  "alpha_deg": 32,
+  "optimal_altitude_km": 1500,
+  "criteria": {
+    "voip_max_latency_ms": 150.0,
+    "radar_max_revisit_min": 120.0
+  },
+  "optimal_constellation": {
+    "type": "non_symmetrical_polar",
+    "inclination_deg": 90,
+    "n1_planes": 11,
+    "n2_sats_per_plane": 37,
+    "total_N": 407,
+    "psi_min_deg": 7.4131,
+    "theta_deg": 8.8957,
+    "latency_ms": 10.0,
+    "est_revisit_min": 10.5
+  },
+  "verification": {
+    "method": "Skyfield SGP4",
+    "grid": "0.5°×0.5° VN box",
+    "n_timesteps": 24,
+    "avg_coverage_pct": 99.6,
+    "min_coverage_pct": 98.5,
+    "full_coverage_pct": 88.0,
+    "revisit_min": 4.8,
+    "T_orbit_min": 115.8
+  },
+  "sweep_table": [
+    {
+      "h": 400,
+      "theta": 2.277,
+      "latency_ms": 2.7,
+      "revisit_min": 2.3,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 10280,
+      "N_sym": 6270,
+      "N_inclined": 5198
+    },
+    {
+      "h": 500,
+      "theta": 2.855,
+      "latency_ms": 3.3,
+      "revisit_min": 3.0,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 5888,
+      "N_sym": 3995,
+      "N_inclined": 3293
+    },
+    {
+      "h": 600,
+      "theta": 3.438,
+      "latency_ms": 4.0,
+      "revisit_min": 3.6,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 3807,
+      "N_sym": 2765,
+      "N_inclined": 2280
+    },
+    {
+      "h": 700,
+      "theta": 4.025,
+      "latency_ms": 4.7,
+      "revisit_min": 4.3,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 2576,
+      "N_sym": 2013,
+      "N_inclined": 1664
+    },
+    {
+      "h": 800,
+      "theta": 4.617,
+      "latency_ms": 5.3,
+      "revisit_min": 5.0,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 1840,
+      "N_sym": 1534,
+      "N_inclined": 1265
+    },
+    {
+      "h": 900,
+      "theta": 5.213,
+      "latency_ms": 6.0,
+      "revisit_min": 5.7,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 1404,
+      "N_sym": 1200,
+      "N_inclined": 987
+    },
+    {
+      "h": 1000,
+      "theta": 5.814,
+      "latency_ms": 6.7,
+      "revisit_min": 6.6,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 1056,
+      "N_sym": 966,
+      "N_inclined": 792
+    },
+    {
+      "h": 1100,
+      "theta": 6.419,
+      "latency_ms": 7.3,
+      "revisit_min": 7.1,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 870,
+      "N_sym": 798,
+      "N_inclined": 656
+    },
+    {
+      "h": 1200,
+      "theta": 7.03,
+      "latency_ms": 8.0,
+      "revisit_min": 8.4,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 650,
+      "N_sym": 663,
+      "N_inclined": 540
+    },
+    {
+      "h": 1300,
+      "theta": 7.646,
+      "latency_ms": 8.7,
+      "revisit_min": 9.3,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 540,
+      "N_sym": 560,
+      "N_inclined": 455
+    },
+    {
+      "h": 1400,
+      "theta": 8.268,
+      "latency_ms": 9.3,
+      "revisit_min": 10.3,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 440,
+      "N_sym": 480,
+      "N_inclined": 390
+    },
+    {
+      "h": 1500,
+      "theta": 8.896,
+      "latency_ms": 10.0,
+      "revisit_min": 10.5,
+      "voip_ok": true,
+      "radar_ok": true,
+      "N_nonsym": 407,
+      "N_sym": 420,
+      "N_inclined": 336
+    }
+  ],
+  "reference": "Chen et al. (2017) MATEC Web of Conferences 114, 01012"
+}
