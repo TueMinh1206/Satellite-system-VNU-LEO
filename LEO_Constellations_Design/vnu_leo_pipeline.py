@@ -16,7 +16,6 @@ VN_LON_MIN, VN_LON_MAX = 102.0, 110.0
 
 
 def coverage_angle(h, alpha_deg):
-    """θ = arcsin((h+Re)/Re · sinα) − α   [eq.(2)]"""
     a   = np.radians(alpha_deg)
     arg = min((h + Re) / Re * np.sin(a), 1.0)
     return np.degrees(np.arcsin(arg) - a)
@@ -44,10 +43,6 @@ def soc_polar_sym(h, alpha_deg, n1_range=range(3, 100)):
     return best
 
 def soc_polar_nonsym(h, alpha_deg, n1_range=range(3, 100)):
-    """
-    ψ_min = (n1−1)/(n1+1) · θ   [eq.(17) — sửa từ v1]
-    Điều kiện tồn tại: n1 > π/(2θ)  [từ eq.(16)]
-    """
     theta     = coverage_angle(h, alpha_deg)
     theta_rad = np.radians(theta)
     best      = {"N": float("inf")}
@@ -135,10 +130,6 @@ def revisit_time_min(n1, h_km):
     return orbit_period_min(h_km) / n1
 
 def sweep_altitude(alpha_deg=32, altitudes=None):
-    """
-    Quét altitude từ 400–1500 km, với α cố định.
-    Trả về bảng kết quả để vẽ và chọn điểm tối ưu.
-    """
     if altitudes is None:
         altitudes = list(range(400, 1600, 100))
 
@@ -166,11 +157,6 @@ def sweep_altitude(alpha_deg=32, altitudes=None):
     return rows
 
 def pick_optimal(rows):
-    """
-    Từ bảng sweep, chọn altitude tối ưu:
-    - both_ok = True (thỏa cả VoIP lẫn Radar)
-    - Trong đó minimize N (non-sym polar)
-    """
     candidates = [r for r in rows if r["both_ok"] and r["nonsym"].get("N", 9999) < 9999]
     if not candidates:
         # Nới lỏng: chỉ cần voip_ok
@@ -193,10 +179,6 @@ def make_tle(sid, i_deg, raan_deg, nu_deg, h_km):
     return f"VNULEO-{sid:04d}", l1, l2
 
 def build_constellation_tle(n1, n2, h_km, i_deg=90.0, nonsym=True):
-    """
-    Sinh TLE cho chòm sao polar.
-    nonsym=True: áp phase seam đúng theo bài báo mục 3.3.2.
-    """
     sats = []
     sid  = 1
     for k in range(n1):
@@ -287,8 +269,7 @@ def plot_all(sweep_rows, optimal, verif, out_prefix="vnu_leo"):
                             left=0.07, right=0.96,
                             top=0.88, bottom=0.10)
 
-    # ── Panel 1: N vs altitude ──────────────────────────────
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs[0, 0])─
     hs  = [r["h"] for r in sweep_rows]
     Ns  = [r["nonsym"].get("N", np.nan) for r in sweep_rows]
     Ns2 = [r["sym"].get("N", np.nan)    for r in sweep_rows]
@@ -304,7 +285,7 @@ def plot_all(sweep_rows, optimal, verif, out_prefix="vnu_leo"):
     ax1.legend(fontsize=7, labelcolor="white", facecolor=S1, edgecolor=S1)
     for sp in ax1.spines.values(): sp.set_edgecolor("#1a2840")
 
-    # ── Panel 2: Latency & Revisit vs altitude ──────────────
+
     ax2 = fig.add_subplot(gs[0, 1])
     lats_v = [r["latency_ms"]  for r in sweep_rows]
     revs_v = [r["revisit_min"] for r in sweep_rows]
