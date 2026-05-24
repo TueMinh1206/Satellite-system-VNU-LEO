@@ -269,7 +269,7 @@ def plot_all(sweep_rows, optimal, verif, out_prefix="vnu_leo"):
                             left=0.07, right=0.96,
                             top=0.88, bottom=0.10)
 
-    ax1 = fig.add_subplot(gs[0, 0])─
+    ax1 = fig.add_subplot(gs[0, 0])
     hs  = [r["h"] for r in sweep_rows]
     Ns  = [r["nonsym"].get("N", np.nan) for r in sweep_rows]
     Ns2 = [r["sym"].get("N", np.nan)    for r in sweep_rows]
