@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Frequency configuration (e.g., Ku-band for Starlink-like performance)
-const FREQUENCY_MHZ = 12000; 
+const FREQUENCY_MHZ = 12000;
 
 // Connection History (simple in-memory log for now)
 let connectionHistory = [];
@@ -41,7 +41,7 @@ app.get('/api/history', (req, res) => {
 app.get('/api/satellites', (req, res) => {
     const { router, gateways } = gateway_router_position;
     const now = Date.now();
-    
+
     const getVisibleFromStore = (observer) => {
         const lat = observer.latitude_router || observer.latitude_gateway;
         const lng = observer.longitude_router || observer.longitude_gateway;
@@ -70,10 +70,10 @@ app.get('/api/satellites', (req, res) => {
 
     routerVisible.forEach(sat => {
         const satId = sat.tleArr[0];
-        
+
         gatewaysVisible.forEach(gw => {
             const satInGw = gw.visible.find(s => s.tleArr[0] === satId);
-            
+
             if (satInGw) {
                 // Potential connection! Calculate quality based on router-to-satellite link
                 const pathLoss = calculatePathLoss(sat.info.range, FREQUENCY_MHZ);
@@ -99,7 +99,7 @@ app.get('/api/satellites', (req, res) => {
     });
 
     // Log connection if it changed significantly or sporadically
-    if (bestConnection && (!connectionHistory.length || connectionHistory[connectionHistory.length-1].satellite !== bestConnection.satellite)) {
+    if (bestConnection && (!connectionHistory.length || connectionHistory[connectionHistory.length - 1].satellite !== bestConnection.satellite)) {
         connectionHistory.push(bestConnection);
         if (connectionHistory.length > 100) connectionHistory.shift();
     }

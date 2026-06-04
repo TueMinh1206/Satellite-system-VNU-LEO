@@ -46,7 +46,7 @@ function calculateSignalQuality(cn, elevation) {
     // Below 5dB C/N = 0%
     // Above 25dB C/N = 100%
     let quality = (cn - 5) / (25 - 5);
-    
+
     // Penalty for low elevation (atmospheric interference)
     if (elevation < 10) {
         quality *= (elevation / 10);
