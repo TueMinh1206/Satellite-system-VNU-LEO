@@ -12,32 +12,139 @@
   type Router = { mac: string; type: 'Fixed' | 'Mobility'; assignedGW: string; trackingSatellite: string; cnRatio: number; pathLoss: number; azimuth: number; elevation: number; signalQuality: SignalQuality; antennaLock: boolean; geoViolation: boolean; bandwidth: string; };
   type Session = { id: string; routerMac: string; satelliteId: string; gatewayId: string; status: SessionStatus; latency: number; packetLoss: number; throughput: number; handoverCount: number; };
 
-  let gateways: Gateway[] = [
-    { id: 'GW-HN', name: 'Trạm Gateway Hà Nội', status: 'Alive', traffic: 450, ping: 12 },
-    { id: 'GW-DN', name: 'Trạm Gateway Đà Nẵng', status: 'Alive', traffic: 320, ping: 18 },
-    { id: 'GW-HCM', name: 'Trạm Gateway TP.HCM', status: 'Alive', traffic: 680, ping: 15 }
-  ];
+  let gateways: Gateway[] = [];
+  let satellites: Satellite[] = [];
+  let routers: Router[] = [];
+  let sessions: Session[] = [];
 
-  let satellites: Satellite[] = [
-    { id: 'SAT-01', altitude: 550, region: 'North', visibleGateway: 'GW-HN', elevation: 62, azimuth: 35, status: 'Visible' },
-    { id: 'SAT-02', altitude: 550, region: 'Central', visibleGateway: 'GW-DN', elevation: 48, azimuth: 120, status: 'Visible' },
-    { id: 'SAT-03', altitude: 550, region: 'South', visibleGateway: 'GW-HCM', elevation: 55, azimuth: 210, status: 'Visible' }
-  ];
-
-  let routers: Router[] = [
-    { mac: '00:1A:2B:3C', type: 'Fixed', assignedGW: 'GW-HN', trackingSatellite: 'SAT-01', cnRatio: 18.5, pathLoss: 161.2, azimuth: 35, elevation: 62, signalQuality: 'Good', antennaLock: true, geoViolation: false, bandwidth: '100%' },
-    { mac: '00:1A:2B:4D', type: 'Mobility', assignedGW: 'GW-DN', trackingSatellite: 'SAT-02', cnRatio: 14.2, pathLoss: 165.5, azimuth: 120, elevation: 48, signalQuality: 'Medium', antennaLock: true, geoViolation: false, bandwidth: '100%' },
-    { mac: '00:1B:3C:5F', type: 'Fixed', assignedGW: 'GW-HCM', trackingSatellite: 'SAT-03', cnRatio: 19.1, pathLoss: 160.8, azimuth: 210, elevation: 55, signalQuality: 'Good', antennaLock: true, geoViolation: false, bandwidth: '100%' }
-  ];
-
-  let sessions: Session[] = [
-    { id: 'SESSION-001', routerMac: '00:1A:2B:3C', satelliteId: 'SAT-01', gatewayId: 'GW-HN', status: 'Connected', latency: 35, packetLoss: 0.8, throughput: 120, handoverCount: 0 },
-    { id: 'SESSION-002', routerMac: '00:1A:2B:4D', satelliteId: 'SAT-02', gatewayId: 'GW-DN', status: 'Connected', latency: 42, packetLoss: 1.1, throughput: 95, handoverCount: 0 },
-    { id: 'SESSION-003', routerMac: '00:1B:3C:5F', satelliteId: 'SAT-03', gatewayId: 'GW-HCM', status: 'Connected', latency: 38, packetLoss: 0.6, throughput: 140, handoverCount: 0 }
-  ];
-
-  let logs: string[] = ['Hệ thống giám sát VNU-LEO khởi động thành công.'];
+  let bestConn: any = null;
+  let handoverHistory: any[] = [];
   let simulationInterval: number | undefined;
+
+  async function fetchData() {
+    try {
+      const [satRes, obsRes, histRes] = await Promise.all([
+        fetch('http://localhost:3001/api/satellites'),
+        fetch('http://localhost:3001/api/observers'),
+        fetch('http://localhost:3001/api/history')
+      ]);
+      
+      if (!satRes.ok || !obsRes.ok || !histRes.ok) throw new Error('API request failed');
+      
+      const satData = await satRes.json();
+      const obsData = await obsRes.json();
+      const histData = await histRes.json();
+
+      bestConn = satData.bestConnection;
+      handoverHistory = histData;
+
+      // Update Gateways
+      gateways = obsData.gateways.map((gw: any, index: number) => ({
+        id: `GW-${index}`,
+        name: gw.name_gateway || `Gateway ${index}`,
+        status: 'Alive',
+        traffic: Math.round(Math.random() * 500 + 200),
+        ping: Math.round(Math.random() * 20 + 10)
+      }));
+
+      // Update Satellites
+      const allSats: Satellite[] = [];
+      const seenSats = new Set();
+      
+      // Satellites visible to gateways
+      satData.gateways.forEach((gwData: any, index: number) => {
+          const gwId = `GW-${index}`;
+          gwData.visible.forEach((s: any) => {
+              const name = s.tleArr[0];
+              if (!seenSats.has(name)) {
+                  allSats.push({
+                      id: name,
+                      altitude: Math.round(s.info.height),
+                      region: 'Visible' as Region,
+                      visibleGateway: gwId,
+                      elevation: Math.round(s.info.elevation),
+                      azimuth: Math.round(s.info.azimuth),
+                      status: 'Visible'
+                  });
+                  seenSats.add(name);
+              }
+          });
+      });
+
+      // Satellites visible to router
+      satData.router.forEach((s: any) => {
+          const name = s.tleArr[0];
+          if (!seenSats.has(name)) {
+              allSats.push({
+                  id: name,
+                  altitude: Math.round(s.info.height),
+                  region: 'North',
+                  visibleGateway: 'Router',
+                  elevation: Math.round(s.info.elevation),
+                  azimuth: Math.round(s.info.azimuth),
+                  status: 'Visible'
+              });
+              seenSats.add(name);
+          }
+      });
+
+      satellites = allSats;
+
+      // Update Routers
+      if (bestConn) {
+          routers = [
+            {
+              mac: '00:1A:2B:VNU',
+              type: 'Fixed',
+              assignedGW: bestConn.gateway,
+              trackingSatellite: bestConn.satellite,
+              cnRatio: parseFloat(bestConn.cn),
+              pathLoss: parseFloat(bestConn.pathLoss),
+              azimuth: Math.round(parseFloat(bestConn.azimuth)),
+              elevation: Math.round(parseFloat(bestConn.elevation)),
+              signalQuality: bestConn.quality > 80 ? 'Good' : bestConn.quality > 40 ? 'Medium' : 'Poor',
+              antennaLock: true,
+              geoViolation: false,
+              bandwidth: `${bestConn.quality}%`
+            }
+          ];
+
+          // Update Sessions
+          sessions = [
+            {
+              id: 'SESS-VNU',
+              routerMac: '00:1A:2B:VNU',
+              satelliteId: bestConn.satellite,
+              gatewayId: bestConn.gateway,
+              status: 'Connected',
+              latency: Math.round(2 * 550 / 300), 
+              packetLoss: bestConn.quality > 80 ? 0.1 : 1.5,
+              throughput: Math.round(bestConn.quality * 2),
+              handoverCount: handoverHistory.length
+            }
+          ];
+      } else {
+          routers = [{
+              mac: '00:1A:2B:VNU',
+              type: 'Fixed',
+              assignedGW: 'Searching...',
+              trackingSatellite: 'None',
+              cnRatio: 0,
+              pathLoss: 0,
+              azimuth: 0,
+              elevation: 0,
+              signalQuality: 'Poor',
+              antennaLock: false,
+              geoViolation: false,
+              bandwidth: '0%'
+          }];
+          sessions = [];
+      }
+
+    } catch (e) {
+      console.error("Connection to API failed. Using defaults.", e);
+    }
+  }
 
   // --- TRẠNG THÁI LỌC DỮ LIỆU (UI DRILL-DOWN) ---
   let selectedGatewayId: string | null = null;
@@ -77,103 +184,13 @@
   $: activeGateways = gateways.filter((g) => g.status === 'Alive').length;
   $: activeSessions = sessions.filter((s) => s.status !== 'Interrupted').length;
 
-  function addLog(msg: string) { logs = [`[${new Date().toLocaleTimeString()}] ${msg}`, ...logs].slice(0, 6); }
-  function randomNumber(min: number, max: number): number { return Math.random() * (max - min) + min; }
-  function clamp(value: number, min: number, max: number): number { return Math.min(max, Math.max(min, value)); }
 
-  function getGatewayByRegion(region: Region): string {
-    if (region === 'North') return 'GW-HN';
-    if (region === 'Central') return 'GW-DN';
-    return 'GW-HCM';
-  }
-
-  function moveSatelliteRegion(region: Region): Region {
-    if (region === 'North') return 'Central';
-    if (region === 'Central') return 'South';
-    return 'North';
-  }
-
-  function getSignalQuality(cnRatio: number): SignalQuality {
-    if (cnRatio >= 18) return 'Good';
-    if (cnRatio >= 14) return 'Medium';
-    return 'Poor';
-  }
-
-  function simulateNetwork() {
-    gateways = gateways.map((gw) => {
-      if (gw.status === 'Alive') {
-        const newTraffic = gw.traffic + randomNumber(-25, 25);
-        if (Math.random() < 0.02) {
-          addLog(`CẢNH BÁO: ${gw.name} mất kết nối!`);
-          return { ...gw, status: 'Dead', traffic: 0 };
-        }
-        return { ...gw, traffic: Math.max(0, Math.round(newTraffic)), ping: Math.round(randomNumber(10, 25)) };
-      }
-      if (Math.random() < 0.1) {
-        addLog(`Phục hồi: ${gw.name} đã kết nối lại.`);
-        return { ...gw, status: 'Alive', traffic: 100 };
-      }
-      return gw;
-    });
-
-    satellites = satellites.map((sat) => {
-      const shouldMove = Math.random() < 0.35;
-      const newRegion = shouldMove ? moveSatelliteRegion(sat.region) : sat.region;
-      return {
-        ...sat,
-        region: newRegion,
-        visibleGateway: getGatewayByRegion(newRegion),
-        elevation: Math.round(randomNumber(25, 85)),
-        azimuth: Math.round((sat.azimuth + randomNumber(15, 45)) % 360)
-      };
-    });
-
-    const aliveGatewayIds = new Set(gateways.filter((gw) => gw.status === 'Alive').map((gw) => gw.id));
-
-    sessions = sessions.map((session) => {
-      const satellite = satellites.find((sat) => sat.id === session.satelliteId);
-      const preferredGateway = satellite ? satellite.visibleGateway : session.gatewayId;
-      let newGateway = preferredGateway;
-
-      if (!aliveGatewayIds.has(preferredGateway)) {
-        const fallbackGateway = gateways.find((gw) => gw.status === 'Alive');
-        if (fallbackGateway) newGateway = fallbackGateway.id;
-      }
-
-      const isConnected = aliveGatewayIds.has(newGateway);
-      const isHandover = newGateway !== session.gatewayId;
-      return {
-        ...session,
-        gatewayId: newGateway,
-        status: !isConnected ? 'Interrupted' : isHandover ? 'Handover' : 'Connected',
-        latency: Math.round(randomNumber(25, 75)),
-        packetLoss: +randomNumber(0.2, 3.5).toFixed(1),
-        throughput: Math.round(randomNumber(60, 180)),
-        handoverCount: session.handoverCount + (isHandover ? 1 : 0)
-      };
-    });
-
-    routers = routers.map((router) => {
-      const session = sessions.find((s) => s.routerMac === router.mac);
-      const satellite = satellites.find((sat) => sat.id === session?.satelliteId);
-      const elevation = satellite ? clamp(satellite.elevation + randomNumber(-4, 4), 5, 85) : router.elevation;
-      const cnRatio = +clamp(10 + elevation * 0.18 + randomNumber(-2, 2), 6, 26).toFixed(1);
-      
-      return {
-        ...router,
-        assignedGW: session?.gatewayId ?? router.assignedGW,
-        trackingSatellite: session?.satelliteId ?? router.trackingSatellite,
-        elevation: Math.round(elevation),
-        cnRatio,
-        pathLoss: +clamp(172 - elevation * 0.08 + randomNumber(-1, 1), 155, 175).toFixed(1),
-        signalQuality: getSignalQuality(cnRatio),
-        antennaLock: cnRatio >= 12 && Boolean(satellite)
-      };
-    });
-  }
-
-  onMount(() => { simulationInterval = window.setInterval(simulateNetwork, 2000); });
+  onMount(() => {
+    fetchData();
+    simulationInterval = window.setInterval(fetchData, 5000); 
+  });
   onDestroy(() => { if (simulationInterval !== undefined) window.clearInterval(simulationInterval); });
+
 </script>
 
 <main class="dashboard">
@@ -288,8 +305,19 @@
       </section>
 
       <div class="system-logs mt-4">
-        <h3>System Logs</h3>
-        <ul>{#each logs as log} <li>{log}</li> {/each}</ul>
+        <h3>Lịch sử Handover</h3>
+        <ul>
+          {#each handoverHistory as event} 
+            <li>
+              <span class="log-time">[{new Date(event.timestamp).toLocaleTimeString()}]</span>
+              <strong>{event.satellite}</strong> ➔ {event.gateway} 
+              <span class="log-meta">({event.quality}%, {event.cn}dB)</span>
+            </li> 
+          {/each}
+          {#if handoverHistory.length === 0}
+            <li class="text-muted">Chưa có bản ghi kết nối nào.</li>
+          {/if}
+        </ul>
       </div>
     </div>
   </div>
