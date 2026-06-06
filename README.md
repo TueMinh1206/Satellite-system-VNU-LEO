@@ -49,7 +49,7 @@ cd gateway-dashboard
 npm install
 npm run dev
 ```
-Truy cập giao diện tại: `http://localhost:5173` (hoặc cổng được hiển thị trên console).
+Truy cập giao diện tại: `http://localhost:5173`.
 
 ## Công nghệ sử dụng
 - **Backend**: Express, `tle.js` (SGP4 propagation).
