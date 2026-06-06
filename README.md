@@ -6,9 +6,11 @@ Dự án thiết kế và mô phỏng Hệ thống Vệ tinh VNU-LEO đảm bả
 thiết, cách sắp xếp quỹ đạo để đảm bảo phủ sóng liên tục toàn bộ Việt Nam. Phục vụ 2
 ngành: Internet/VoIP (độ trễ thấp) và truyền tải dữ liệu Ảnh/Radar thời tiết (băng thông
 cao).
+
 **Bài toán Gateway (Core Network)**: Lập trình mô phỏng quá trình duy trì phiên kết nối
 và chuyển giao (Handover) khi vệ tinh di chuyển qua các Gateway đặt tại Hà Nội, Đà
 Nẵng, TP. Hồ Chí Minh.
+
 **Bài toán Client (End-user Router)**: Xây dựng phần mềm trực quan hóa mô phỏng hoạt
 động của Router người dùng. Phần mềm phải trực quan hóa được quá trình ăng-ten mảng
 pha bám bắt vệ tinh, cập nhật các thông số C/N, suy hao, và chất lượng tín hiệu theo thời
