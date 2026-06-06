@@ -2,16 +2,16 @@
 
 Dự án thiết kế và mô phỏng Hệ thống Vệ tinh VNU-LEO đảm bảo các yêu cầu sau:
 
-**Bài toán Quỹ đạo & Phủ sóng**: Lập trình tính toán và đề xuất số lượng vệ tinh LEO cần
+- **Bài toán Quỹ đạo & Phủ sóng**: Lập trình tính toán và đề xuất số lượng vệ tinh LEO cần
 thiết, cách sắp xếp quỹ đạo để đảm bảo phủ sóng liên tục toàn bộ Việt Nam. Phục vụ 2
 ngành: Internet/VoIP (độ trễ thấp) và truyền tải dữ liệu Ảnh/Radar thời tiết (băng thông
 cao).
 
-**Bài toán Gateway (Core Network)**: Lập trình mô phỏng quá trình duy trì phiên kết nối
+- **Bài toán Gateway (Core Network)**: Lập trình mô phỏng quá trình duy trì phiên kết nối
 và chuyển giao (Handover) khi vệ tinh di chuyển qua các Gateway đặt tại Hà Nội, Đà
 Nẵng, TP. Hồ Chí Minh.
 
-**Bài toán Client (End-user Router)**: Xây dựng phần mềm trực quan hóa mô phỏng hoạt
+- **Bài toán Client (End-user Router)**: Xây dựng phần mềm trực quan hóa mô phỏng hoạt
 động của Router người dùng. Phần mềm phải trực quan hóa được quá trình ăng-ten mảng
 pha bám bắt vệ tinh, cập nhật các thông số C/N, suy hao, và chất lượng tín hiệu theo thời
 gian thực.
@@ -31,7 +31,7 @@ gian thực.
 ## Hướng dẫn cài đặt và chạy
 
 ### 1. Chuẩn bị
-Đảm bảo bạn đã cài đặt [Node.js](https://nodejs.org/) (phiên bản 18 trở lên).
+Cài đặt [Node.js](https://nodejs.org/) (phiên bản 18 trở lên).
 
 ### 2. Chạy Backend
 Mở một terminal mới:
@@ -57,4 +57,4 @@ Truy cập giao diện tại: `http://localhost:5173` (hoặc cổng được hi
 - **Nghiên cứu**: Python (Jupyter Notebook).
 
 ---
-*Dự án được thực hiện bởi Nhóm nghiên cứu thiết kế hệ thống LEO.*
+*Dự án được thực hiện bởi Nhóm 9 môn học truyền thông vệ tinh.*
