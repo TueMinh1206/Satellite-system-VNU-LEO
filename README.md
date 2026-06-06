@@ -38,7 +38,7 @@ Mở một terminal mới:
 ```bash
 cd server
 npm install
-npm start
+node index.js
 ```
 Server sẽ chạy tại: `http://localhost:3001`
 
