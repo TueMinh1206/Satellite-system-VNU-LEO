@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNU-LEO: Satellite System Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07090f;
+            --surface: rgba(13, 21, 32, 0.7);
+            --accent: #00e5ff;
+            --accent-glow: rgba(0, 229, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #aabbcc;
+            --transition: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .presentation-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+            visibility: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg) 90%);
+            z-index: 1;
+        }
+
+        .glass-card {
+            position: relative;
+            z-index: 2;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: cardEntrance 0.8s ease-out forwards;
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .content {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        ul {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        li::before {
+            content: '\f058';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(0, 229, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .btn {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent);
+            z-index: 1000;
+            transition: width 0.3s;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            color: #7cfc00;
+            font-size: 1.4rem;
+            text-align: center;
+        }
+
+        /* Slide specific styles */
+        #slide-1 {
+            background-image: url('vnu_leo_cover.png');
+        }
+
+        .accent-text {
+            color: var(--accent);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="progress-bar" id="progress"></div>
+
+    <div class="presentation-container">
+        <!-- Slide 1 -->
+        <div class="slide active" id="slide-1">
+            <div class="glass-card">
+                <h1>Hệ thống vệ tinh VNU-LEO</h1>
+                <p class="content" style="font-size: 1.5rem; margin-top: 1rem;">Thiết kế chòm sao vệ tinh quỹ đạo thấp
+                    tối ưu cho vùng lãnh thổ Việt Nam</p>
+                <div style="margin-top: 3rem; border-left: 4px solid var(--accent); padding-left: 2rem;">
+                    <p class="content">Phương pháp: Streets-of-Coverage (SoC)</p>
+                    <p class="content">Ứng dụng: Internet/VoIP & Viễn thám</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide" id="slide-2">
+            <div class="glass-card">
+                <h2><i class="fas fa-bullseye"></i> Mục tiêu thiết kế</h2>
+                <div class="content">
+                    <p>Phát triển hệ thống vệ tinh phục vụ đa mục tiêu cho khu vực Việt Nam <span
+                            class="accent-text">[8.0°N − 23.5°N]</span>:</p>
+                    <ul>
+                        <li><strong>Dịch vụ Internet/VoIP:</strong> Đảm bảo độ trễ thấp &lt; 150ms theo tiêu chuẩn ITU-T
+                            G.114.</li>
+                        <li><strong>Dữ liệu ảnh/Radar:</strong> Dung lượng truyền tải đạt ≥ 1GB cho mỗi lần vệ tinh bay
+                            qua trạm mặt đất.</li>
+                        <li><strong>Tối ưu hóa:</strong> Giảm thiểu số lượng vệ tinh (N) nhưng vẫn đảm bảo phủ sóng liên
+                            tục 24/7.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Single Coverage Geometry (Enhanced) -->
+        <div class="slide" id="slide-3">
+            <div class="glass-card">
+                <h2><i class="fas fa-satellite-dish"></i> Hình học phủ sóng đơn vệ tinh</h2>
+                <div class="content">
+                    <p>Ăng-ten băng thông hẹp (high-gain) giới hạn vùng phủ sóng (footprint).</p>
+                    <div class="formula">
+                        θ = arcsin((h + Re)/R_e * sin α) - α
+                    </div>
+                    <p>Trong đó:</p>
+                    <ul style="display: grid; grid-template-columns: 1fr 1fr;">
+                        <li><strong>h:</strong> Độ cao quỹ đạo.</li>
+                        <li><strong>R_e:</strong> Bán kính Trái đất.</li>
+                        <li><strong>α:</strong> Nửa góc búp sóng.</li>
+                        <li><strong>θ:</strong> Góc phủ Geocentric.</li>
+                    </ul>
+                    <p style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                        <i class="fas fa-info-circle"></i> Góc phủ θ quyết định trực tiếp đến độ rộng của dải "Street".
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: SoC Street Geometry (New) -->
+        <div class="slide" id="slide-4">
+            <div class="glass-card">
+                <h2><i class="fas fa-road"></i> Công thức "Street of Coverage"</h2>
+                <div class="content">
+                    <p>Khi các vệ tinh bay theo một "dải", độ rộng của dải phủ sóng liên tục (ψ) được tính như sau:</p>
+                    <div class="formula">
+                        cos ψ = cos θ / cos(π / n2)
+                    </div>
+                    <p>Điều kiện để dải phủ sóng tồn tại liên tục (không có kẽ hở giữa các vệ tinh trong cùng mặt
+                        phẳng):</p>
+                    <div class="formula" style="color: var(--accent); font-weight: 700;">
+                        θ > π / n2
+                    </div>
+                    <p><i class="fas fa-microchip"></i> n2 là số vệ tinh trên một mặt phẳng quỹ đạo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Optimization for Vietnam (New) -->
+        <div class="slide" id="slide-5">
+            <div class="glass-card">
+                <h2><i class="fas fa-layer-group"></i> Quy trình thiết kế chòm sao</h2>
+                <div class="content">
+                    <ol style="margin-left: 20px; color: var(--text-secondary);">
+                        <li style="margin-bottom: 1rem;"><strong>Bước 1:</strong> Tính góc phủ θ từ độ cao h và góc búp
+                            sóng α.</li>
+                        <li style="margin-bottom: 1rem;"><strong>Bước 2:</strong> Xác định độ rộng street tối thiểu
+                            (ψ_min) để phủ kín từ 8.0°N đến 23.5°N.</li>
+                        <li style="margin-bottom: 1rem;"><strong>Bước 3:</strong> Tính số vệ tinh mỗi mặt phẳng (n2) để
+                            cos(π/n2) = cos θ / cos ψ_min.</li>
+                        <li style="margin-bottom: 1rem;"><strong>Bước 4:</strong> Tính tổng số vệ tinh N = n1 * n2. Quét
+                            qua các giá trị n1 để tìm N_min.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Slide 5 moved to 7 -->
+        <div class="slide" id="slide-6">
+            <div class="glass-card">
+                <h2><i class="fas fa-project-diagram"></i> Các loại hình chòm sao</h2>
+                <div class="content">
+                    <p>Phân tích hiệu quả bao phủ dựa trên mục tiêu cụ thể:</p>
+                    <ul>
+                        <li><strong>Inclined Orbit:</strong> Tối ưu nhất cho Việt Nam. Giảm số lượng vệ tinh bằng cách
+                            tập trung vùng phủ vào dải vĩ độ thấp.</li>
+                        <li><strong>Polar Orbit:</strong> Phù hợp bao phủ toàn cầu nhưng gây dư thừa sóng tại các vùng
+                            cực.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7 (Original 6) -->
+        <div class="slide" id="slide-7">
+            <div class="glass-card">
+                <h2><i class="fas fa-clock"></i> Ràng buộc kỹ thuật: Latency</h2>
+                <div class="content">
+                    <p>Độ trễ truyền sóng một chiều tại các độ cao LEO đảm bảo chất lượng VoIP/Gaming.</p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value">~12.16 ms</span>
+                            <span class="stat-label">Delay tại h=1500km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">&lt; 150 ms</span>
+                            <span class="stat-label">Tiêu chuẩn ITU-T G.114</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide" id="slide-7">
+            <div class="glass-card">
+                <h2><i class="fas fa-download"></i> Ràng buộc: Imaging Throughput</h2>
+                <div class="content">
+                    <p>Tính toán Link Budget băng tần X (Downlink) để đảm bảo truyền tải dữ liệu ảnh viễn thám.</p>
+                    <ul>
+                        <li>Tần số hoạt động: 13.0 GHz.</li>
+                        <li>Công suất phát: 10W.</li>
+                        <li>Anten ground station: Optimized dish tracking.</li>
+                    </ul>
+                    <p class="accent-text" style="font-size: 1.4rem;">Khả năng đáp ứng: ≥ 1.0 GB / pass</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide" id="slide-8">
+            <div class="glass-card">
+                <h2><i class="fas fa-chart-line"></i> Quá trình tối ưu hóa Altitude</h2>
+                <div class="content">
+                    <p>Quét các độ cao từ 400km đến 1500km để tìm điểm cân bằng giữa chất lượng tín hiệu và số lượng vệ
+                        tinh.</p>
+                    <ul>
+                        <li><strong>400km:</strong> Link budget cực tốt nhưng cần > 1800 vệ tinh.</li>
+                        <li><strong>1000km:</strong> Cần khoảng 275 vệ tinh.</li>
+                        <li><strong>1500km:</strong> Điểm tối ưu về kinh tế với chỉ 60 vệ tinh.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9 -->
+        <div class="slide" id="slide-9">
+            <div class="glass-card">
+                <h2><i class="fas fa-check-circle"></i> Kết quả thiết kế tối ưu</h2>
+                <div class="content">
+                    <p>Thông số kỹ thuật cuối cùng cho hệ thống <span class="accent-text">VNU-LEO</span>:</p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value">1500 km</span>
+                            <span class="stat-label">Độ cao (Altitude)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">60</span>
+                            <span class="stat-label">Tổng số vệ tinh (N)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">3 x 20</span>
+                            <span class="stat-label">Mặt phẳng x Vệ tinh</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">85.5°</span>
+                            <span class="stat-label">Góc nghiêng (Inclination)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10 -->
+        <div class="slide" id="slide-10">
+            <div class="glass-card">
+                <h2><i class="fas fa-shield-halved"></i> Kiểm chứng & Kết luận</h2>
+                <div class="content">
+                    <ul>
+                        <li><strong>Mô phỏng:</strong> Sử dụng Skyfield/SGP4 xác nhận vùng phủ sóng 100% tại dải vĩ độ
+                            mục tiêu.</li>
+                        <li><strong>Dữ liệu:</strong> Đã khởi tạo các bộ TLE chuẩn NORAD cho toàn bộ 60 vệ tinh.</li>
+                        <li><strong>Kết luận:</strong> Hệ thống VNU-LEO là phương án khả thi, hiệu quả về chi phí để
+                            triển khai hạ tầng Internet vệ tinh cho Việt Nam.</li>
+                    </ul>
+                    <div style="text-align: center; margin-top: 3rem;">
+                        <p style="font-weight: 600; color: var(--accent); font-size: 1.5rem;">CẢM ƠN QUÝ THẦY CÔ VÀ CÁC
+                            BẠN!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progress');
+        let currentSlide = 0;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            const progressWidth = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progressWidth}%`;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlide();
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
