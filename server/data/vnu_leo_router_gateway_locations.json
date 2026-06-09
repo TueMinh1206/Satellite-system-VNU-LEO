@@ -5,8 +5,8 @@
   "router": {
     "id": "router_001",
     "name": "User Router 01",
-    "latitude_router": 21.0285,
-    "longitude_router": 105.8542,
+    "latitude_router": 12.00,
+    "longitude_router": 107.00,
     "altitude_m_router": 20
   },
   "gateways": [
@@ -24,7 +24,7 @@
       "type": "gateway",
       "latitude_gateway": 16.0471,
       "longitude_gateway": 108.2068,
-      "altitude_m_gateway": 10
+      "altitude_m_gateway": 20
     },
     {
       "id": "gw_hcmc",
@@ -32,7 +32,7 @@
       "type": "gateway",
       "latitude_gateway": 10.8231,
       "longitude_gateway": 106.6297,
-      "altitude_m_gateway": 10
+      "altitude_m_gateway": 20
     }
   ]
 }
