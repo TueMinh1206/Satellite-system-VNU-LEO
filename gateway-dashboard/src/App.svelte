@@ -79,7 +79,7 @@
       // Update Gateways
       gateways = obsData.gateways.map((gw: any, index: number) => ({
         id: `GW-${index}`,
-        name: gw.name_gateway || `Gateway ${index}`,
+        name: gw.name || `Gateway ${index}`,
         status: "Alive",
         traffic: Math.round(Math.random() * 500 + 200),
         ping: Math.round(Math.random() * 20 + 10),
@@ -294,7 +294,7 @@
     <div class="left-col">
       <section class="panel">
         <h2>🌐 Gateways</h2>
-        <Globe />
+        <Globe bestConn={bestConn} />
         <div class="card-list">
           {#each gateways as gw}
             <div
