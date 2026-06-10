@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const { getVisibleSatellites } = require('tle.js');
 const path = require('path');
+const satellite = require('satellite.js');
 const { calculatePathLoss, calculateCN, calculateSignalQuality } = require('./utils/physics');
 
 const app = express();
@@ -56,27 +57,6 @@ app.get('/api/satellites', (req, res) => {
             timestampMS: now
         });
     };
-app.get('/api/globe', (req, res) => {
-  const now = new Date();
-  const positions = uniquetles.map(tle => {
-    try {
-      const satrec = satellite.twoline2satrec(tle[1], tle[2]);
-      const pv = satellite.propagate(satrec, now);
-      if (!pv.position) return null;
-      const gmst = satellite.gstime(now);
-      const geo = satellite.eciToGeodetic(pv.position, gmst);
-      return {
-        name: tle[0],
-        lat: satellite.degreesLat(geo.latitude),
-        lng: satellite.degreesLong(geo.longitude),
-        alt: geo.height / 6371
-      };
-    } catch { return null; }
-  }).filter(Boolean);
-
-  res.json({ satellites: positions, gateways: gateway_router_position.gateways });
-});
-
     const routerVisible = getVisibleFromStore(router);
     const gatewaysVisible = gateways.map(gw => ({
         name: gw.name,
@@ -131,6 +111,26 @@ app.get('/api/globe', (req, res) => {
     };
 
     res.json(results);
+});
+app.get('/api/globe', (req, res) => {
+  const now = new Date();
+  const positions = uniquetles.map(tle => {
+    try {
+      const satrec = satellite.twoline2satrec(tle[1], tle[2]);
+      const pv = satellite.propagate(satrec, now);
+      if (!pv.position) return null;
+      const gmst = satellite.gstime(now);
+      const geo = satellite.eciToGeodetic(pv.position, gmst);
+      return {
+        name: tle[0],
+        lat: satellite.degreesLat(geo.latitude),
+        lng: satellite.degreesLong(geo.longitude),
+        alt: geo.height
+      };
+    } catch { return null; }
+  }).filter(Boolean);
+
+  res.json({ satellites: positions, gateways: gateway_router_position.gateways });
 });
 
 app.listen(port, () => {
