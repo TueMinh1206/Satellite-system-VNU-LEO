@@ -160,9 +160,9 @@
             satelliteId: bestConn.satellite,
             gatewayId: bestConn.gateway,
             status: "Connected",
-            latency: Math.round((2 * 550) / 300),
-            packetLoss: bestConn.quality > 80 ? 0.1 : 1.5,
-            throughput: Math.round(bestConn.quality * 2),
+            latency: Number(bestConn.latency),
+            packetLoss: bestConn.packetLoss,
+            throughput: Number(bestConn.throughput  ?? 0),
             handoverCount: handoverHistory.length,
           },
         ];
