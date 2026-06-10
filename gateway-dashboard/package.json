@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "cobe": "^2.0.1",
-    "globe.gl": "^2.46.1"
+    "globe.gl": "^2.46.1",
+    "socket.io-client": "^4.8.3"
   }
 }
