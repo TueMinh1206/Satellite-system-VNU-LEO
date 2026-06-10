@@ -341,7 +341,6 @@
                 <span>{sat.region}</span>
                 <span>El: {sat.elevation}°</span>
               </div>
-              <div class="sat-gw">Thuộc: {sat.visibleGateway}</div>
             </div>
           {/each}
           {#if displaySatellites.length === 0}

@@ -7,7 +7,7 @@
     "name": "User Router 01",
     "latitude_router": 12.00,
     "longitude_router": 107.00,
-    "altitude_m_router": 20
+    "altitude_m_router": 0
   },
   "gateways": [
     {
