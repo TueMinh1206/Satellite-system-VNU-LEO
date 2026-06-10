@@ -5,6 +5,14 @@ const { getVisibleSatellites } = require('tle.js');
 const path = require('path');
 const satellite = require('satellite.js');
 const { calculatePathLoss, calculateCN, calculateSignalQuality } = require('./utils/physics');
+const {
+    calculateLatency,
+    calculatePing,
+    calculateThroughput,
+    calculatePacketLoss,
+    calculateJitter,
+    calculateLinkScore
+} = require('./utils/network');
 
 const app = express();
 const port = 3001;
