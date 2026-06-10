@@ -87,6 +87,10 @@ app.get('/api/satellites', (req, res) => {
                 const pathLoss = calculatePathLoss(sat.info.range, FREQUENCY_MHZ);
                 const cn = calculateCN(pathLoss);
                 const quality = calculateSignalQuality(cn, sat.info.elevation);
+                const latency = calculateLatency(sat.info.range);
+                const ping = calculatePing(sat.info.range);
+                const throughput = calculateThroughput(quality);
+                const packetLoss = calculatePacketLoss(cn);
 
                 if (quality > maxQuality) {
                     maxQuality = quality;
@@ -96,6 +100,10 @@ app.get('/api/satellites', (req, res) => {
                         quality: quality,
                         cn: cn.toFixed(2),
                         pathLoss: pathLoss.toFixed(2),
+                        latency: latency.toFixed(2),
+                        ping: ping.toFixed(2),
+                        throughput,
+                        packetLoss,
                         azimuth: sat.info.azimuth.toFixed(2),
                         elevation: sat.info.elevation.toFixed(2),
                         range: sat.info.range.toFixed(2),
