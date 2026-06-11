@@ -1,17 +1,27 @@
+"""
+handover_engine.py — Thuần Python, không phụ thuộc tọa độ gateway.
+Nhận danh sách gateway từ telemetry, tự chọn gateway tốt nhất.
+"""
+
 from __future__ import annotations
 
 import asyncio
 import json
+import math
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
 
+# ═════════════════════════════════════════════════════════════════════
+# Định nghĩa dữ liệu cơ bản
+# ═════════════════════════════════════════════════════════════════════
+
 class SessionState(Enum):
-    CONNECTED    = "connected"
-    HANDOVER     = "handover"
-    SEARCHING    = "searching"
+    CONNECTED = "connected"
+    HANDOVER = "handover"
+    SEARCHING = "searching"
     DISCONNECTED = "disconnected"
 
 class HandoverType(Enum):
@@ -40,11 +50,14 @@ class UserSession:
     user_id: str
     current_satellite: Satellite
     gateway: Gateway
+    user_lat: float = 0.0
+    user_lon: float = 0.0
     state: SessionState = SessionState.CONNECTED
     handover_count: int = 0
     handover_history: List[Dict] = field(default_factory=list)
     bytes_transferred: int = 0
     start_time: float = field(default_factory=time.time)
+    last_gateways_view: List[Dict] = field(default_factory=list)  # store latest gateways view
 
     @property
     def uptime_s(self) -> float:
@@ -117,6 +130,10 @@ class TelemetryFrame:
         }
 
 
+# ═════════════════════════════════════════════════════════════════════
+# Cấu hình Handover
+# ═════════════════════════════════════════════════════════════════════
+
 @dataclass
 class HandoverConfig:
     elev_warn_deg: float = 25.0
@@ -135,6 +152,10 @@ class HandoverConfig:
     def total_ho_time_ms(self) -> float:
         return self.pre_establish_ms + self.switch_time_ms + self.release_time_ms
 
+
+# ═════════════════════════════════════════════════════════════════════
+# WebSocket Connection Manager
+# ═════════════════════════════════════════════════════════════════════
 
 class ConnectionManager:
     def __init__(self):
@@ -171,6 +192,10 @@ class ConnectionManager:
         return len(self._clients)
 
 
+# ═════════════════════════════════════════════════════════════════════
+# Handover Engine (Core)
+# ═════════════════════════════════════════════════════════════════════
+
 class HandoverEngine:
     def __init__(self,
                  config: Optional[HandoverConfig] = None,
@@ -181,6 +206,62 @@ class HandoverEngine:
         self.event_log: List[Dict] = []
         self._monitor_tasks: Dict[str, asyncio.Task] = {}
 
+    # ── Helper: Chọn gateway tốt nhất từ danh sách gateways_view ─────────────
+    def _select_best_gateway(self, gateways_view: List[dict]) -> str:
+        best_name = "Unknown"
+        best_score = -1e9
+        for gw in gateways_view:
+            # Bỏ qua gateway không thấy vệ tinh
+            if gw.get('elevation', -90) < self.cfg.elev_min_deg:
+                continue
+            # Điểm số: alpha*elevation + beta*cn
+            score = self.cfg.alpha_elevation * gw['elevation'] + self.cfg.beta_cn * gw['cn']
+            if score > best_score:
+                best_score = score
+                best_name = gw['name']
+        return best_name
+
+    # ── Public method: cập nhật dữ liệu từ telemetry (Node.js qua Svelte) ────
+    def update_satellite_and_gateways(self, user_id: str,
+                                       satellite_id: str,
+                                       elevation: float,
+                                       azimuth: float,
+                                       cn_db: float,
+                                       range_km: float,
+                                       gateways_view: List[dict]) -> bool:
+        session = self.sessions.get(user_id)
+        if not session:
+            return False
+
+        # Lưu lại gateways_view cho session (có thể dùng khi handover)
+        session.last_gateways_view = gateways_view
+
+        # Cập nhật thông tin vệ tinh
+        sat = session.current_satellite
+        sat.id = satellite_id
+        sat.elevation = elevation
+        sat.azimuth = azimuth
+        sat.cn_db = cn_db
+        sat.slant_range_km = range_km
+
+        # Tính signal_quality (0-100)
+        norm_cn = min(100, max(0, (cn_db + 10) * 4))
+        norm_el = min(100, max(0, elevation * 2))
+        sat.signal_quality = (norm_cn + norm_el) / 2
+
+        # Chọn gateway tốt nhất từ danh sách
+        selected_gw_name = self._select_best_gateway(gateways_view)
+        if session.gateway.name != selected_gw_name:
+            old_gw = session.gateway
+            new_gw = Gateway(name=selected_gw_name)
+            session.gateway = new_gw
+            old_gw.active_sessions = max(0, old_gw.active_sessions - 1)
+            new_gw.active_sessions += 1
+            self._log("INFO", user_id, f"Gateway chọn bởi engine: {old_gw.name} → {new_gw.name}")
+        sat.serving_gateway = selected_gw_name
+        return True
+
+    # ── Internal logging ─────────────────────────────────────────────────────
     def _log(self, level: str, user_id: str, msg: str) -> Dict:
         icons = {"INFO": "ℹ️", "WARN": "⚠️", "HANDOVER": "🔄",
                  "ERROR": "❌", "CONNECT": "🟢", "DISCONNECT": "🔴"}
@@ -194,6 +275,7 @@ class HandoverEngine:
         print(f"{icons.get(level, '•')} [{entry['time']}] [{user_id}] {msg}")
         return entry
 
+    # ── Broadcast helper ─────────────────────────────────────────────────────
     async def _broadcast_event(self, session: UserSession, event_type: str):
         if self.ws_manager is None:
             return
@@ -216,6 +298,7 @@ class HandoverEngine:
         )
         await self.ws_manager.broadcast(frame.to_dict())
 
+    # ── Handover execution (make-before-break) ───────────────────────────────
     async def _perform_handover(self, session: UserSession, reason: str) -> bool:
         old_sat = session.current_satellite
         old_gw = session.gateway
@@ -226,12 +309,16 @@ class HandoverEngine:
                   f"Bắt đầu HO | {old_sat.id} elev={old_sat.elevation:.1f}° C/N={old_sat.cn_db:.1f}dB | reason={reason}")
         await self._broadcast_event(session, "HANDOVER_START")
 
+        # Pre-establish & switch (simulate)
         await asyncio.sleep(self.cfg.pre_establish_ms / 1000)
         await asyncio.sleep(self.cfg.switch_time_ms / 1000)
 
-        # Không tự chọn gateway mới — sẽ được cập nhật từ telemetry tiếp theo
+        # At this point, we would normally select a new satellite.
+        # For simplicity, we keep the same satellite (it will be updated by next telemetry).
+        # However, if we had a list of candidate satellites, we could choose the best.
         latency_ms = (time.time() - t_start) * 1000
-        # Tạo satellite tạm (giữ nguyên data cũ, sẽ bị ghi đè)
+
+        # Create new satellite object (temporary, will be overwritten)
         new_sat = Satellite(
             id=old_sat.id,
             elevation=old_sat.elevation,
@@ -240,7 +327,7 @@ class HandoverEngine:
             slant_range_km=old_sat.slant_range_km,
             serving_gateway=session.gateway.name,
         )
-        # Ghi nhận handover với gateway hiện tại (sẽ cập nhật sau)
+        # Record handover (gateway remains old for now, will be updated)
         session.record_handover(old_sat, new_sat, session.gateway, latency_ms, HandoverType.INTRA_GATEWAY)
         session.current_satellite = new_sat
 
@@ -255,16 +342,19 @@ class HandoverEngine:
         await self._broadcast_event(session, "HANDOVER_DONE")
         return True
 
+    # ── Monitor loop (runs per session) ──────────────────────────────────────
     async def _monitor_session(self, session: UserSession):
         while session.state != SessionState.DISCONNECTED:
             sat = session.current_satellite
 
+            # Update estimated throughput
             if session.state == SessionState.CONNECTED:
                 throughput_mbps = max(0, sat.cn_db * 3)
                 session.bytes_transferred += int(
                     throughput_mbps * 1e6 * self.cfg.monitor_interval_s / 8
                 )
 
+            # Check thresholds
             if session.state == SessionState.CONNECTED:
                 needs_ho = False
                 reason = ""
@@ -290,6 +380,7 @@ class HandoverEngine:
                         session.state = SessionState.SEARCHING
                         await asyncio.sleep(3)
 
+            # Disconnect if elevation too low
             if sat.elevation < self.cfg.elev_min_deg:
                 session.state = SessionState.DISCONNECTED
                 self._log("DISCONNECT", session.user_id,
@@ -303,11 +394,10 @@ class HandoverEngine:
         self._monitor_tasks.pop(session.user_id, None)
 
     # ══════════════════════════════════════════════════════════════════════════
-    # PUBLIC API
+    # PUBLIC API (dùng từ api.py)
     # ══════════════════════════════════════════════════════════════════════════
 
-    async def add_session(self, user_id: str) -> UserSession:
-        """Tạo session mới với gateway tạm 'Unknown'."""
+    async def add_session(self, user_id: str, user_lat: float = 0.0, user_lon: float = 0.0) -> UserSession:
         dummy_gw = Gateway(name="Unknown")
         sat = Satellite(id="PENDING", elevation=45.0, azimuth=180.0,
                         cn_db=10.0, slant_range_km=800.0, serving_gateway="Unknown")
@@ -315,6 +405,8 @@ class HandoverEngine:
             user_id=user_id,
             current_satellite=sat,
             gateway=dummy_gw,
+            user_lat=user_lat,
+            user_lon=user_lon,
         )
         self.sessions[user_id] = session
         self._log("CONNECT", user_id, "Session tạo, chờ telemetry...")
@@ -322,44 +414,8 @@ class HandoverEngine:
         self._monitor_tasks[user_id] = task
         return session
 
-    def update_satellite_data(self, user_id: str,
-                               satellite_id: str,
-                               elevation: float,
-                               azimuth: float,
-                               cn_db: float,
-                               range_km: float,
-                               gateway: str) -> bool:
-        """Cập nhật dữ liệu từ Node.js (bestConnection)."""
-        session = self.sessions.get(user_id)
-        if not session:
-            return False
-
-        sat = session.current_satellite
-        sat.id = satellite_id
-        sat.elevation = elevation
-        sat.azimuth = azimuth
-        sat.cn_db = cn_db
-        sat.slant_range_km = range_km
-
-        # Tính signal_quality (0-100)
-        norm_cn = min(100, max(0, (cn_db + 10) * 4))
-        norm_el = min(100, max(0, elevation * 2))
-        sat.signal_quality = (norm_cn + norm_el) / 2
-
-        # Cập nhật gateway nếu khác
-        if session.gateway.name != gateway:
-            old_gw = session.gateway
-            new_gw = Gateway(name=gateway)
-            session.gateway = new_gw
-            old_gw.active_sessions = max(0, old_gw.active_sessions - 1)
-            new_gw.active_sessions += 1
-            self._log("INFO", user_id, f"Gateway cập nhật: {old_gw.name} → {new_gw.name}")
-
-        sat.serving_gateway = gateway
-        return True
-
     def gateway_status(self) -> List[Dict]:
-        """Trả về danh sách gateway từ các session (không cần vị trí)."""
+        """Tổng hợp từ các session đang hoạt động."""
         gw_map = {}
         for sess in self.sessions.values():
             gw = sess.gateway
