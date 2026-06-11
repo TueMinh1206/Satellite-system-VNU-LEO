@@ -1,7 +1,3 @@
-"""
-api.py — VNU-LEO Python Bridge (chỉ anten)
-Chỉ còn endpoint /api/phased-array để vẽ polar chart và link budget.
-"""
 
 from __future__ import annotations
 
@@ -16,13 +12,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from anten import LinkBudget, get_weights, pattern_db
 
 
-# ── Singleton instances ──────────────────────────────────────────────
+
 lb = LinkBudget()
 
 ANGLES = np.linspace(-90, 90, 181)
 
 
-# ── Lifespan (không còn handover engine) ────────────────────────────
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("  [OK] Antenna service started (no handover engine)")
@@ -45,7 +41,7 @@ app.add_middleware(
 # ═════════════════════════════════════════════════════════════════════
 
 def convert_numpy_to_python(obj):
-    """Đệ quy chuyển đổi numpy types sang Python native."""
+
     if isinstance(obj, np.bool_):
         return bool(obj)
     elif isinstance(obj, (np.integer, np.int64, np.int32)):
