@@ -44,7 +44,7 @@ Server sẽ chạy tại: `http://localhost:3001`
 
 Mở thêm một terminal mới
 ```bash 
-cd anten+handover_python
+cd anten
 pip install -r requirement.txt
 uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 ```
