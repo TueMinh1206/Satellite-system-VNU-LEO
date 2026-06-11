@@ -137,8 +137,8 @@ class TelemetryFrame:
 @dataclass
 class HandoverConfig:
     elev_warn_deg: float = 25.0
-    elev_critical_deg: float = 15.0
-    elev_min_deg: float = 5.0
+    elev_critical_deg: float = 30.0
+    elev_min_deg: float = 10.0
     cn_warn_db: float = 8.0
     cn_critical_db: float = 5.0
     pre_establish_ms: float = 30.0

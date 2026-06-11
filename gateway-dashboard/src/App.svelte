@@ -96,7 +96,7 @@
       const [satRes, obsRes, histRes] = await Promise.all([
         fetch("http://localhost:3001/api/satellites"),
         fetch("http://localhost:3001/api/observers"),
-        fetch("http://localhost:3001/api/history"),
+        fetch("http://localhost:8000/api/handover-history"),
       ]);
       if (!satRes.ok) return;
 
@@ -359,25 +359,6 @@
       <!-- Phased Array Polar Chart (thay Globe) -->
       <section class="panel">
         <h2>📡 Phased Array — Beam Tracking</h2>
-
-        <!-- Controls -->
-        <div class="phased-controls">
-          <div class="algo-row">
-            {#each ["conv","lms","mvdr","rls"] as a}
-              <button
-                class="algo-btn"
-                class:active={phasedAlgo === a}
-                on:click={() => { phasedAlgo = a; fetchPhasedArray(); }}
-              >{a.toUpperCase()}</button>
-            {/each}
-          </div>
-          <div class="n-row">
-            <span class="n-label">N={phasedN}</span>
-            <input type="range" min="2" max="16" step="2"
-              bind:value={phasedN} on:change={fetchPhasedArray} />
-          </div>
-        </div>
-
         <!-- Polar chart component -->
         <PolarChart data={phasedData} satellite={bestSatellite} />
 
@@ -740,7 +721,7 @@
   .card {
     background: #111f35;
     border-radius: 10px;
-    padding: 12px;
+    padding: 8px 12px;
     border: 1px solid transparent;
     border-left: 4px solid #475569;
     cursor: pointer;
@@ -752,7 +733,7 @@
   .active-gw    { border-color: #38bdf8 !important; background: #0c4a6e; }
   .engine-selected { border-color: #f59e0b !important; }
 
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;}
   .card-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .engine-tag { font-size: 10px; color: #f59e0b; font-weight: 700; }
   .selected-gw-badge {

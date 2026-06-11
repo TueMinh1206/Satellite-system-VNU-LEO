@@ -1,15 +1,5 @@
-"""
-anten.py — beamforming và link budget cho VNU-LEO API
-Chỉ chứa các thành phần cần thiết cho FastAPI bridge.
-"""
-
 import math
 import numpy as np
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Link Budget (tính toán ngân sách đường truyền)
-# ══════════════════════════════════════════════════════════════════════════════
-
 class LinkBudget:
     """
     Link budget cho đường xuống vệ tinh.

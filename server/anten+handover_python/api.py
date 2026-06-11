@@ -1,7 +1,3 @@
-"""
-api.py — VNU-LEO Python Bridge
-Updated to receive gateways view from Svelte.
-"""
 
 from __future__ import annotations
 
@@ -94,9 +90,9 @@ def get_phased_array(
     el: float = 45.0,
     az: float = 180.0,
     rain: float = 20.0,
-    N: int = 8,
-    algo: str = "mvdr",
 ):
+    N = 8
+    algo = "mvdr"
     alt_m = 550_000
     el_rad = math.radians(max(el, 1.0))
     range_m = alt_m / math.sin(el_rad)
