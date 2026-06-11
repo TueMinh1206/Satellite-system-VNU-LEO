@@ -90,21 +90,29 @@ def simulate(T, P, inc_deg, duration_h=24, step_min=2):
     return worst_percent
 
 def generate_tle_file(T, P, inc_deg, filename="constellation_tle.txt"):
+    """Tạo file TLE đúng định dạng: mỗi vệ tinh có dòng tên + 2 dòng TLE"""
     sats_per_plane = T // P
     raans_deg = [360.0 * i / P for i in range(P)]
     m0s_deg = [360.0 * j / sats_per_plane for j in range(sats_per_plane)]
-    epoch_str = "26095.00000000"
+    # Epoch: 26001.50000000 (ngày 01/01/2026 12:00 UTC) như mẫu
+    epoch_str = "26001.50000000"
     with open(filename, 'w') as f:
         sat_num = 1
         for raan in raans_deg:
             for m0 in m0s_deg:
-                line1 = f"1 {sat_num:05d}U {epoch_str}  .00000000  00000-0  00000-0 0  9999"
+                # Dòng tên vệ tinh
+                f.write(f"VNULEO-{sat_num:04d}\n")
+                # Dòng 1 TLE
+                line1 = f"1 {sat_num:05d}U {epoch_str}  .00000000  00000-0  00000-0 0  9990"
+                # Dòng 2 TLE: độ nghiêng, RAAN, ecc=0, arg perigee=0, mean anomaly, mean motion, revolution number
+                # Revolution number có thể tăng dần (10,20,...) hoặc để 0
+                rev_num = sat_num * 10  # tạo số riêng, không quan trọng
                 line2 = (f"2 {sat_num:05d} {inc_deg:8.4f} {raan:8.4f} 0000000   0.0000 {m0:8.4f} "
-                         f"{mean_motion_rev_per_day:11.8f} 0")
+                         f"{mean_motion_rev_per_day:11.8f} {rev_num:5d}")
                 f.write(line1 + "\n")
                 f.write(line2 + "\n")
                 sat_num += 1
-    print(f"Đã xuất {T} bộ TLE vào file '{filename}'")
+    print(f"Đã xuất {T} bộ TLE (3 dòng/vệ tinh) vào file '{filename}'")
 
 def optimize():
     print("Tìm cấu hình tối ưu (toàn bộ lưới Việt Nam >=95% phủ sóng)...")
@@ -135,4 +143,4 @@ if __name__ == "__main__":
         print(f"Độ nghiêng: {inc}°")
         print(f"Tỷ lệ phủ sóng trên toàn lãnh thổ: {worst:.2f}%")
     else:
-        print("Không tìm thấy cấu hình.")
+        print("Tăng số vệ tinh lên")

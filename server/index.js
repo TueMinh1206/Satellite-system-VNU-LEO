@@ -33,7 +33,7 @@ class HandoverEngine {
     constructor(config = {}) {
         this.elevWarnDeg = config.elevWarnDeg ?? 25;
         this.elevCriticalDeg = config.elevCriticalDeg ?? 15;
-        this.elevMinDeg = config.elevMinDeg ?? 5;
+        this.elevMinDeg = config.elevMinDeg ?? 20;
         this.cnWarnDb = config.cnWarnDb ?? 8;
         this.cnCriticalDb = config.cnCriticalDb ?? 5;
         this.alphaElev = config.alphaElev ?? 0.4;
