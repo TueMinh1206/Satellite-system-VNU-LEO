@@ -291,9 +291,6 @@ app.get('/api/handover-history', (req, res) => {
     res.json(handoverEngine.getHistory(50));
 });
 
-// 5. /api/globe – giữ nguyên nếu có (bạn có thể thêm lại)
-// (nếu cần globe, bạn tự thêm vào)
-
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', clients: wss.clients.size, historyLength: handoverEngine.handoverHistory.length });
