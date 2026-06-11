@@ -42,6 +42,12 @@ node index.js
 ```
 Server sẽ chạy tại: `http://localhost:3001`
 
+Mở thêm một terminal mới
+```bash 
+cd anten+handover_python
+pip install -r requirement.txt
+uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+```
 ### 3. Chạy Frontend
 Mở một terminal khác:
 ```bash

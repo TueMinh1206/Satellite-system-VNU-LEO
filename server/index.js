@@ -95,7 +95,12 @@ app.get('/api/satellites', (req, res) => {
     // 2. For that best satellite, get visibility info from each gateway
     let gatewaysView = [];
     if (bestSatellite) {
-        gatewaysView = gateways.map(gw => {
+        const gatewaysVisible = gateways.map(gw => ({
+            name: gw.name,
+            visible: getVisibleFromStore(gw, now)
+        }));
+
+        gatewaysView = gatewaysVisible.map(gw => {
             const satInGw = gw.visible.find(s => s.tleArr[0] === bestSatellite.id);
             if (satInGw && satInGw.info.elevation > 5) {
                 const pathLossGw = calculatePathLoss(satInGw.info.range, FREQUENCY_MHZ);
