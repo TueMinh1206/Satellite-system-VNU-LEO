@@ -157,8 +157,8 @@
       const satAz  = satellite.azimuth;
       const satEl  = satellite.elevation;
       // Map: elevation 90° = center, 0° = edge
-      const satR   = R * (1 - satEl / 90);
-      const satRad = (satAz - 90) * Math.PI / 180;
+      const satR   = R;  // dot nằm ở vành ngoài (0 dB)
+      const satRad = (data.params.theta0 - 90) * Math.PI / 180;
       const satX   = cx + satR * Math.cos(satRad);
       const satY   = cy + satR * Math.sin(satRad);
 
