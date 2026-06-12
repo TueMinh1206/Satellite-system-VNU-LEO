@@ -176,7 +176,7 @@ function getVisibleFromStore(observer, timestampMS) {
         observerLng: lng,
         observerHeight: alt / 1000,
         tles: uniquetles,
-        elevationThreshold: 0,
+        elevationThreshold: 20,
         timestampMS: timestampMS
     });
 }
@@ -230,7 +230,6 @@ function computeCurrentState(now = Date.now()) {
     return { bestSatellite, gatewaysView };
 }
 
-// ---------- KHỞI TẠO HTTP & WEBSOCKET SERVER ----------
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
@@ -242,7 +241,6 @@ wss.on('connection', (ws) => {
     ws.on('close', () => console.log('WebSocket client disconnected'));
 });
 
-// Định kỳ cập nhật trạng thái và xử lý handover (mỗi 2 giây)
 setInterval(() => {
     const now = Date.now();
     const { bestSatellite, gatewaysView } = computeCurrentState(now);
@@ -251,13 +249,11 @@ setInterval(() => {
     }
 }, 2000);
 
-// ---------- API ENDPOINTS ----------
-// 1. /api/observers – giữ nguyên
+
 app.get('/api/observers', (req, res) => {
     res.json(gateway_router_position);
 });
 
-// 2. /api/history – trả về lịch sử handover (để tương thích cũ)
 app.get('/api/history', (req, res) => {
     const history = handoverEngine.getHistory(50).map(ev => ({
         satellite: ev.to_sat,
