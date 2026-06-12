@@ -33,7 +33,7 @@ class HandoverEngine {
     constructor(config = {}) {
         this.elevWarnDeg = config.elevWarnDeg ?? 25;
         this.elevCriticalDeg = config.elevCriticalDeg ?? 15;
-        this.elevMinDeg = config.elevMinDeg ?? 20;
+        this.elevMinDeg = config.elevMinDeg ?? 5;
         this.cnWarnDb = config.cnWarnDb ?? 8;
         this.cnCriticalDb = config.cnCriticalDb ?? 5;
         this.alphaElev = config.alphaElev ?? 0.4;
@@ -290,6 +290,9 @@ app.get('/api/satellites', (req, res) => {
 app.get('/api/handover-history', (req, res) => {
     res.json(handoverEngine.getHistory(50));
 });
+
+// 5. /api/globe – giữ nguyên nếu có (bạn có thể thêm lại)
+// (nếu cần globe, bạn tự thêm vào)
 
 // Health check
 app.get('/health', (req, res) => {
